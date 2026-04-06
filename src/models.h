@@ -146,14 +146,14 @@ struct TrainConfig {
 };
 
 struct ProjectData {
-    QVector<SignalEntry> signals;
+    QVector<SignalEntry> signalEntries;
     Scenario scenario;
     TrainConfig trainConfig;
 
     QJsonObject toJson() const
     {
         QJsonArray signalArray;
-        for (const auto &signal : signals) {
+        for (const auto &signal : signalEntries) {
             signalArray.append(signal.toJson());
         }
 
@@ -168,9 +168,9 @@ struct ProjectData {
     {
         ProjectData data;
         const auto signalArray = obj.value(QStringLiteral("signals")).toArray();
-        data.signals.reserve(signalArray.size());
+        data.signalEntries.reserve(signalArray.size());
         for (const auto &value : signalArray) {
-            data.signals.append(SignalEntry::fromJson(value.toObject()));
+            data.signalEntries.append(SignalEntry::fromJson(value.toObject()));
         }
 
         data.scenario = Scenario::fromJson(obj.value(QStringLiteral("scenario")).toObject());

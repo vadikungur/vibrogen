@@ -39,18 +39,18 @@ void MainWindow::addSignal()
         return;
     }
 
-    m_data.signals.append(dialog.signal());
+    m_data.signalEntries.append(dialog.signal());
     refreshSignalTable();
 }
 
 void MainWindow::removeSignal()
 {
     const int row = m_table->currentRow();
-    if (row < 0 || row >= m_data.signals.size()) {
+    if (row < 0 || row >= m_data.signalEntries.size()) {
         return;
     }
 
-    m_data.signals.removeAt(row);
+    m_data.signalEntries.removeAt(row);
     refreshSignalTable();
 }
 
@@ -222,10 +222,10 @@ void MainWindow::setupCentral()
 
 void MainWindow::refreshSignalTable()
 {
-    m_table->setRowCount(m_data.signals.size());
+    m_table->setRowCount(m_data.signalEntries.size());
 
-    for (int row = 0; row < m_data.signals.size(); ++row) {
-        const auto &signal = m_data.signals.at(row);
+    for (int row = 0; row < m_data.signalEntries.size(); ++row) {
+        const auto &signal = m_data.signalEntries.at(row);
         m_table->setItem(row, 0, new QTableWidgetItem(signalTypeToString(signal.type)));
         m_table->setItem(row, 1, new QTableWidgetItem(signal.name));
         m_table->setItem(row, 2, new QTableWidgetItem(QString::number(signal.amplitude, 'f', 2)));
