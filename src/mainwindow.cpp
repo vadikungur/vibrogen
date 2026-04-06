@@ -3,6 +3,7 @@
 #include "projectserializer.h"
 #include "scenariodialog.h"
 #include "signaldialog.h"
+#include "signalplotwidgets.h"
 #include "trainconfigdialog.h"
 
 #include <QAction>
@@ -16,8 +17,8 @@
 #include <QStatusBar>
 #include <QTableWidget>
 #include <QTabWidget>
-#include <QTextEdit>
 #include <QToolBar>
+#include <QTimer>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QWidget>
@@ -58,6 +59,7 @@ void MainWindow::togglePlayback()
 {
     if (m_engine.isRunning()) {
         m_engine.stop();
+        m_visualTimer->stop();
         m_startStopAction->setText(QStringLiteral("Старт"));
         m_statusLabel->setText(QStringLiteral("Остановлено"));
         return;
@@ -72,6 +74,7 @@ void MainWindow::togglePlayback()
 
     m_startStopAction->setText(QStringLiteral("Стоп"));
     m_statusLabel->setText(QStringLiteral("Воспроизведение"));
+    m_visualTimer->start();
 }
 
 void MainWindow::openProject()
@@ -148,6 +151,10 @@ void MainWindow::setupUi()
 
     m_statusLabel = new QLabel(QStringLiteral("Остановлено"), this);
     statusBar()->addPermanentWidget(m_statusLabel);
+
+    m_visualTimer = new QTimer(this);
+    m_visualTimer->setInterval(100);
+    connect(m_visualTimer, &QTimer::timeout, this, &MainWindow::updateVisualizations);
 }
 
 void MainWindow::setupMenus()
@@ -197,21 +204,13 @@ void MainWindow::setupCentral()
     connect(removeButton, &QPushButton::clicked, this, &MainWindow::removeSignal);
 
     m_tabs = new QTabWidget(this);
-    auto *oscillo = new QTextEdit(this);
-    oscillo->setReadOnly(true);
-    oscillo->setText(QStringLiteral("Осциллограмма будет отображаться здесь."));
+    m_oscillogram = new OscillogramWidget(this);
+    m_spectrum = new SpectrumWidget(this);
+    m_waterfall = new WaterfallWidget(this);
 
-    auto *spectrum = new QTextEdit(this);
-    spectrum->setReadOnly(true);
-    spectrum->setText(QStringLiteral("Спектр будет отображаться здесь."));
-
-    auto *waterfall = new QTextEdit(this);
-    waterfall->setReadOnly(true);
-    waterfall->setText(QStringLiteral("Waterfall будет отображаться здесь."));
-
-    m_tabs->addTab(oscillo, QStringLiteral("Осциллограмма"));
-    m_tabs->addTab(spectrum, QStringLiteral("Спектр"));
-    m_tabs->addTab(waterfall, QStringLiteral("Waterfall"));
+    m_tabs->addTab(m_oscillogram, QStringLiteral("Осциллограмма"));
+    m_tabs->addTab(m_spectrum, QStringLiteral("Спектр"));
+    m_tabs->addTab(m_waterfall, QStringLiteral("Waterfall"));
 
     layout->addWidget(m_table, 3);
     layout->addWidget(buttonsWidget);
@@ -248,4 +247,20 @@ void MainWindow::applyData(const ProjectData &data)
 {
     m_data = data;
     refreshSignalTable();
+}
+
+void MainWindow::updateVisualizations()
+{
+    if (!m_engine.isRunning()) {
+        return;
+    }
+
+    const QVector<float> samples = m_engine.takeRecentSamples(4096);
+    if (samples.isEmpty()) {
+        return;
+    }
+
+    m_oscillogram->setSamples(samples);
+    m_spectrum->setSamples(samples, m_engine.sampleRate());
+    m_waterfall->setSamples(samples, m_engine.sampleRate());
 }

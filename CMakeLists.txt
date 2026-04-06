@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.21)
 project(vibrogen VERSION 0.1.0 LANGUAGES CXX)
 
+include(GNUInstallDirs)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
@@ -26,6 +28,8 @@ add_executable(vibrogen
     src/scenariodialog.cpp
     src/trainconfigdialog.h
     src/trainconfigdialog.cpp
+    src/signalplotwidgets.h
+    src/signalplotwidgets.cpp
 )
 
 target_link_libraries(vibrogen PRIVATE Qt6::Widgets Qt6::Multimedia)
@@ -33,3 +37,15 @@ target_link_libraries(vibrogen PRIVATE Qt6::Widgets Qt6::Multimedia)
 install(TARGETS vibrogen
     BUNDLE DESTINATION .
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+qt_generate_deploy_app_script(
+    TARGET vibrogen
+    OUTPUT_SCRIPT deploy_script
+    NO_UNSUPPORTED_PLATFORM_ERROR
+)
+install(CODE [[
+    if(NOT IS_ABSOLUTE "${CMAKE_INSTALL_PREFIX}")
+        get_filename_component(CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}" ABSOLUTE)
+    endif()
+    include("${deploy_script}")
+]])
