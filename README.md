@@ -39,11 +39,14 @@ cmake --build build
 ```bash
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build --config Release
-cmake --install build --config Release --prefix dist
+cmake --install build --config Release --prefix "$(pwd)/dist"
 ```
 
 После этого в `dist` будет приложение и необходимые Qt-зависимости
 (через `windeployqt`/`macdeployqt` и соответствующие механизмы Qt6).
+
+> Важно: указывайте **абсолютный** `--prefix`, иначе Qt deploy-скрипт может
+> завершиться ошибкой вида `Given qt.conf path is not an absolute path`.
 
 ### Windows
 

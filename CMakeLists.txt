@@ -28,6 +28,8 @@ add_executable(vibrogen
     src/scenariodialog.cpp
     src/trainconfigdialog.h
     src/trainconfigdialog.cpp
+    src/signalplotwidgets.h
+    src/signalplotwidgets.cpp
 )
 
 target_link_libraries(vibrogen PRIVATE Qt6::Widgets Qt6::Multimedia)
@@ -41,4 +43,9 @@ qt_generate_deploy_app_script(
     OUTPUT_SCRIPT deploy_script
     NO_UNSUPPORTED_PLATFORM_ERROR
 )
-install(SCRIPT ${deploy_script})
+install(CODE [[
+    if(NOT IS_ABSOLUTE "${CMAKE_INSTALL_PREFIX}")
+        get_filename_component(CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}" ABSOLUTE)
+    endif()
+    include("${deploy_script}")
+]])

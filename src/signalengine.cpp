@@ -2,6 +2,7 @@
 
 #include <QtMath>
 #include <cstring>
+#include <QMutexLocker>
 
 namespace {
 constexpr int kSampleRate = 48000;
@@ -31,6 +32,8 @@ void SignalGeneratorDevice::resetGenerator()
 {
     m_timeSec = 0.0;
     m_phase.fill(0.0);
+    QMutexLocker lock(&m_recentMutex);
+    m_recentSamples.clear();
 }
 
 qint64 SignalGeneratorDevice::readData(char *data, qint64 maxlen)
@@ -44,14 +47,26 @@ qint64 SignalGeneratorDevice::readData(char *data, qint64 maxlen)
     const int channels = m_format.channelCount();
     const int frames = static_cast<int>(maxlen / (sampleBytes * channels));
     auto *out = reinterpret_cast<qint16 *>(data);
+    QVector<float> produced;
+    produced.reserve(frames);
 
     for (int frame = 0; frame < frames; ++frame) {
         const float sample = sampleAtTime(m_timeSec);
+        produced.push_back(sample);
         const qint16 s16 = static_cast<qint16>(qBound(-1.0f, sample, 1.0f) * 32767);
         for (int ch = 0; ch < channels; ++ch) {
             *out++ = s16;
         }
         m_timeSec += 1.0 / m_format.sampleRate();
+    }
+
+    {
+        QMutexLocker lock(&m_recentMutex);
+        m_recentSamples += produced;
+        constexpr int kMaxRecentSamples = kSampleRate * 8;
+        if (m_recentSamples.size() > kMaxRecentSamples) {
+            m_recentSamples.remove(0, m_recentSamples.size() - kMaxRecentSamples);
+        }
     }
 
     return frames * sampleBytes * channels;
@@ -60,6 +75,17 @@ qint64 SignalGeneratorDevice::readData(char *data, qint64 maxlen)
 qint64 SignalGeneratorDevice::writeData(const char *, qint64)
 {
     return 0;
+}
+
+QVector<float> SignalGeneratorDevice::takeRecentSamples(int maxSamples)
+{
+    QMutexLocker lock(&m_recentMutex);
+    if (m_recentSamples.isEmpty()) {
+        return {};
+    }
+
+    const int count = qBound(1, maxSamples, m_recentSamples.size());
+    return m_recentSamples.mid(m_recentSamples.size() - count, count);
 }
 
 float SignalGeneratorDevice::sampleAtTime(double seconds)
@@ -186,6 +212,16 @@ void SignalEngine::stop()
 bool SignalEngine::isRunning() const
 {
     return m_sink != nullptr;
+}
+
+QVector<float> SignalEngine::takeRecentSamples(int maxSamples) const
+{
+    return m_device->takeRecentSamples(maxSamples);
+}
+
+int SignalEngine::sampleRate() const
+{
+    return kSampleRate;
 }
 
 QAudioFormat SignalEngine::createFormat() const
