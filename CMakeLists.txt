@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.21)
 project(vibrogen VERSION 0.1.0 LANGUAGES CXX)
 
+include(GNUInstallDirs)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
@@ -33,3 +35,10 @@ target_link_libraries(vibrogen PRIVATE Qt6::Widgets Qt6::Multimedia)
 install(TARGETS vibrogen
     BUNDLE DESTINATION .
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+qt_generate_deploy_app_script(
+    TARGET vibrogen
+    OUTPUT_SCRIPT deploy_script
+    NO_UNSUPPORTED_PLATFORM_ERROR
+)
+install(SCRIPT ${deploy_script})
