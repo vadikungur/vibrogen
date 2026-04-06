@@ -19,7 +19,7 @@ SignalGeneratorDevice::SignalGeneratorDevice(QObject *parent)
 void SignalGeneratorDevice::setProjectData(const ProjectData &data)
 {
     m_project = data;
-    m_phase = QVector<double>(m_project.signals.size(), 0.0);
+    m_phase = QVector<double>(m_project.signalEntries.size(), 0.0);
 }
 
 void SignalGeneratorDevice::setAudioFormat(const QAudioFormat &format)
@@ -35,7 +35,7 @@ void SignalGeneratorDevice::reset()
 
 qint64 SignalGeneratorDevice::readData(char *data, qint64 maxlen)
 {
-    if (m_format.sampleRate() <= 0 || m_project.signals.isEmpty()) {
+    if (m_format.sampleRate() <= 0 || m_project.signalEntries.isEmpty()) {
         memset(data, 0, maxlen);
         return maxlen;
     }
@@ -64,15 +64,15 @@ qint64 SignalGeneratorDevice::writeData(const char *, qint64)
 
 float SignalGeneratorDevice::sampleAtTime(double seconds)
 {
-    if (m_project.signals.isEmpty()) {
+    if (m_project.signalEntries.isEmpty()) {
         return 0.0f;
     }
 
     const double speedFactor = qMax(0.0, scenarioSpeed(seconds) / kMaxTrainSpeedKmh);
     double sum = 0.0;
 
-    for (int i = 0; i < m_project.signals.size(); ++i) {
-        const auto &signal = m_project.signals.at(i);
+    for (int i = 0; i < m_project.signalEntries.size(); ++i) {
+        const auto &signal = m_project.signalEntries.at(i);
         const double amplitude = signal.amplitude;
 
         if (signal.type == SignalType::Harmonic) {
@@ -88,7 +88,7 @@ float SignalGeneratorDevice::sampleAtTime(double seconds)
         }
     }
 
-    return static_cast<float>(sum / m_project.signals.size());
+    return static_cast<float>(sum / m_project.signalEntries.size());
 }
 
 double SignalGeneratorDevice::scenarioSpeed(double seconds) const
