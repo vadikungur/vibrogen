@@ -1,7 +1,6 @@
 #include "signalplotwidgets.h"
 
 #include <QPainter>
-#include <QPainterPath>
 #include <QResizeEvent>
 #include <QtMath>
 
