@@ -27,7 +27,7 @@ void SignalGeneratorDevice::setAudioFormat(const QAudioFormat &format)
     m_format = format;
 }
 
-void SignalGeneratorDevice::reset()
+void SignalGeneratorDevice::resetGenerator()
 {
     m_timeSec = 0.0;
     m_phase.fill(0.0);
@@ -154,7 +154,7 @@ bool SignalEngine::start(QString *error)
 
     const auto format = createFormat();
     m_device->setAudioFormat(format);
-    m_device->reset();
+    m_device->resetGenerator();
 
     m_sink = new QAudioSink(format, this);
     m_device->open(QIODevice::ReadOnly);

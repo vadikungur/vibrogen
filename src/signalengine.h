@@ -15,7 +15,7 @@ public:
 
     void setProjectData(const ProjectData &data);
     void setAudioFormat(const QAudioFormat &format);
-    void reset();
+    void resetGenerator();
 
     qint64 readData(char *data, qint64 maxlen) override;
     qint64 writeData(const char *data, qint64 len) override;
